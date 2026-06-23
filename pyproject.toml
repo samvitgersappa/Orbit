@@ -1,0 +1,35 @@
+[project]
+name = "orbit"
+version = "0.1.0"
+description = "Local-first observability, replay, and security for LangGraph agents running on Ollama."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    { name = "ORBIT Contributors" }
+]
+license = { text = "MIT" }
+dependencies = [
+    "aiosqlite>=0.22.1",
+    "fastapi>=0.138.0",
+    "httpx>=0.28.1",
+    "langgraph>=1.2.6",
+    "little-canary>=0.3.0",
+    "mypy>=2.1.0",
+    "ollama>=0.6.2",
+    "pydantic>=2.13.4",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.15.18",
+    "sqlalchemy>=2.0.51",
+    "structlog>=26.1.0",
+    "typer>=0.26.7",
+    "uvicorn>=0.49.0",
+]
+]
+
+[project.urls]
+Homepage = "https://github.com/samvitgersappa/orbit"
+Repository = "https://github.com/samvitgersappa/orbit.git"
+
+[project.scripts]
+orbit = "orbit.cli.main:app"
