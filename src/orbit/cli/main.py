@@ -299,8 +299,8 @@ def models() -> None:
 
         typer.echo("\n🗄️  DB Models:")
         if db_models:
-            for m in db_models:
-                typer.echo(f"  • {m.name:<30} provider={m.provider}  quant={m.quantization or '—'}")
+            for db_model in db_models:
+                typer.echo(f"  • {db_model.name:<30} provider={db_model.provider}  quant={db_model.quantization or '—'}")
         else:
             typer.echo("  (none)")
 

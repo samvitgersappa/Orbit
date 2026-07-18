@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import select
 
@@ -8,7 +9,7 @@ from orbit.database.session import AsyncSessionLocal
 
 class ArenaEngine:
     async def run_battle(self, task: str, models: list[str]):
-        match_details = {}
+        match_details: dict[str, dict[str, Any]] = {}
         winner = None
         best_ari = -1.0
 

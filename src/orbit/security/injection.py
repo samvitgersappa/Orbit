@@ -6,7 +6,7 @@ from __future__ import annotations
 class PromptInjectionDetector:
     def __init__(self) -> None:
         try:
-            from little_canary import CanaryDetector  # type: ignore[import]
+            from little_canary import CanaryDetector  # type: ignore
 
             self._detector = CanaryDetector()
             self._available = True
