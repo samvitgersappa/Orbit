@@ -253,15 +253,55 @@ function RunsTab({ runs, loading }: { runs: Run[]; loading: boolean }) {
                 </div>
               </div>
             )}
-            {selected.traces.length > 0 && (
+            {selected.security_events && selected.security_events.length > 0 && (
               <div>
-                <p className="text-sm font-medium mb-2">Trace Steps ({selected.traces.length})</p>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
+                <p className="text-sm font-medium mb-2 text-rose-500 flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4" /> Security Events ({selected.security_events.length})
+                </p>
+                <div className="space-y-2">
+                  {selected.security_events.map(se => (
+                    <div key={se.id} className="bg-rose-500/10 border border-rose-500/20 rounded p-2 text-xs flex justify-between items-center">
+                      <div className="flex gap-2 items-center">
+                        <Badge variant="destructive" className="uppercase text-[10px]">{se.risk_type}</Badge>
+                        <span className="text-foreground font-medium">{se.owasp_category ?? "Unknown"}</span>
+                      </div>
+                      <span className="text-muted-foreground">Severity: {se.severity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {selected.traces.length > 0 && (
+              <div className="pt-2">
+                <p className="text-sm font-medium mb-4">Execution Trace ({selected.traces.length} steps)</p>
+                <div className="space-y-0 max-h-96 overflow-y-auto pr-2">
                   {selected.traces.map(t => (
-                    <div key={t.step} className="flex gap-2 text-xs bg-muted/20 rounded px-2 py-1">
-                      <span className="text-muted-foreground w-6">{t.step}</span>
-                      <Badge variant="outline" className="text-xs">{t.type}</Badge>
-                      <span className="text-muted-foreground">{t.node ?? "—"}</span>
+                    <div key={t.step} className="flex gap-4 text-xs relative pl-4 border-l-2 border-border/60 pb-6 last:pb-0 last:border-transparent ml-2">
+                      <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-primary" />
+                      <div className="w-8 text-muted-foreground font-mono mt-0.5">#{t.step}</div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px] uppercase bg-background">{t.type}</Badge>
+                          <span className="font-medium text-foreground">{t.node ?? "System"}</span>
+                        </div>
+                        {t.content && typeof t.content === 'object' && Object.keys(t.content).length > 0 && (
+                          <div className="mt-2 bg-muted/30 p-2 rounded-md border border-border/40 space-y-2">
+                            {Object.entries(t.content as Record<string, unknown>).map(([k, v]) => (
+                              <div key={k} className="flex flex-col gap-1">
+                                <span className="text-muted-foreground font-medium">{k.replace(/_/g, " ")}:</span>
+                                {typeof v === 'string' && (v.includes('\n') || v.length > 60) ? (
+                                  <pre className="p-2 bg-background/50 rounded overflow-x-auto text-[10px] font-mono border border-border/40 text-foreground/80">
+                                    {v}
+                                  </pre>
+                                ) : (
+                                  <span className="font-mono text-foreground/90">{String(v)}</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

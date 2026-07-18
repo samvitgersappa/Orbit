@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import subprocess
 import sys
 
 import typer
 import uvicorn
+from rich.prompt import Prompt
+
+from orbit.integrations.ollama.client import OllamaClient
 
 app = typer.Typer(
     name="orbit",
@@ -40,10 +44,48 @@ def serve(
 @app.command()
 def trace(
     path: str = typer.Argument(..., help="Path to the agent script to trace"),
+    model: str = typer.Option(None, "--model", "-m", help="Ollama model to use"),
 ) -> None:
     """Run and trace an agent script."""
-    typer.echo(f"🔍 Tracing agent at {path}...")
-    result = subprocess.run([sys.executable, path], check=False)
+    typer.echo(f"🔍 Preparing to trace agent at {path}...")
+    
+    async def _ensure_model() -> str:
+        client = OllamaClient()
+        try:
+            available = await client.list_models()
+        except Exception as e:
+            typer.echo(f"⚠️  Could not connect to Ollama: {e}", err=True)
+            available = []
+        finally:
+            await client.close()
+            
+        model_names = [m.get("name") for m in available if m.get("name")]
+        
+        target_model = model
+        if not target_model:
+            typer.echo("\n📦 Available Local Models:")
+            for m in model_names:
+                typer.echo(f"  • {m}")
+            typer.echo("")
+            target_model = Prompt.ask("Enter model name to use", default="qwen3.5:4b")
+            
+        if target_model not in model_names:
+            typer.echo(f"\n📥 Model '{target_model}' not found locally. Pulling from Ollama...")
+            result = subprocess.run(["ollama", "pull", target_model])
+            if result.returncode != 0:
+                typer.echo("❌ Failed to pull model.", err=True)
+                raise typer.Exit(1)
+            typer.echo("✅ Pull complete.\n")
+            
+        return target_model
+
+    selected_model = asyncio.run(_ensure_model())
+    
+    env = os.environ.copy()
+    env["ORBIT_MODEL"] = selected_model
+    
+    typer.echo(f"🚀 Running agent with model: {selected_model}")
+    result = subprocess.run([sys.executable, path], env=env, check=False)
     if result.returncode == 0:
         typer.echo("✅ Agent completed successfully.")
     else:

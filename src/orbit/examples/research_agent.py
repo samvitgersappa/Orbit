@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import time
 
 from sqlalchemy import select
 
@@ -52,7 +54,7 @@ async def _record_tool_call(
 @trace_agent(
     agent_name="research_agent",
     task="Research the latest trends in large language model quantization",
-    model_name="llama3.1",
+    model_name=os.getenv("ORBIT_MODEL", "qwen3.5:4b"),
 )
 async def run_agent() -> dict:
     """Multi-step research workflow that queries Ollama and synthesizes findings."""
@@ -70,7 +72,7 @@ async def run_agent() -> dict:
         query = "What are the latest techniques and trends in LLM quantization (GPTQ, AWQ, GGUF)?"
         await guard.scan_input(run_id, query)
 
-        response = await client.generate("llama3.1", query)
+        response = await client.generate(os.getenv("ORBIT_MODEL", "qwen3.5:4b"), query)
         answer = response.get("response", "")
         await guard.scan_output(run_id, answer)
 
@@ -90,7 +92,7 @@ async def run_agent() -> dict:
         t0 = time.time()
         # Simulate tool execution with a follow-up prompt
         search_response = await client.generate(
-            "llama3.1",
+            os.getenv("ORBIT_MODEL", "qwen3.5:4b"),
             f"Pretend you searched the web for: '{query}'. Summarise 3 key findings in bullet points.",
         )
         search_ms = int((time.time() - t0) * 1000)
@@ -114,7 +116,7 @@ async def run_agent() -> dict:
             run_id, step, "node_start", "synthesizer", {"input_length": len(search_result)}
         )
 
-        synth_response = await client.generate("llama3.1", synth_prompt)
+        synth_response = await client.generate(os.getenv("ORBIT_MODEL", "qwen3.5:4b"), synth_prompt)
         summary = synth_response.get("response", "")
         await guard.scan_output(run_id, summary)
 

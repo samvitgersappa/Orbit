@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 
 from sqlalchemy import select
@@ -90,7 +91,7 @@ def _retrieve(query: str, top_k: int = 2) -> list[dict]:
 @trace_agent(
     agent_name="retrieval_agent",
     task="Answer: How does ORBIT integrate with LangGraph and Ollama?",
-    model_name="llama3.1",
+    model_name=os.getenv("ORBIT_MODEL", "qwen3.5:4b"),
 )
 async def run_agent() -> dict:
     """RAG agent: retrieves relevant local docs, then synthesizes an answer."""
@@ -136,7 +137,7 @@ async def run_agent() -> dict:
         await _record_trace(
             run_id, step, "node_start", "answer_generator", {"context_length": len(context)}
         )
-        resp = await client.generate("llama3.1", rag_prompt)
+        resp = await client.generate(os.getenv("ORBIT_MODEL", "qwen3.5:4b"), rag_prompt)
         answer = resp.get("response", "")
         await guard.scan_output(run_id, answer)
         await _record_trace(

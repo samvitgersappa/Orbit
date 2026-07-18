@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 
 from sqlalchemy import select
@@ -68,7 +69,7 @@ def _run_code_test(code: str) -> tuple[bool, str]:
 @trace_agent(
     agent_name="coding_agent",
     task="Write a Python function for QuickSort",
-    model_name="llama3.1",
+    model_name=os.getenv("ORBIT_MODEL", "qwen3.5:4b"),
 )
 async def run_agent() -> dict:
     """Coding agent: generates code, tests it, and reports results."""
@@ -96,7 +97,7 @@ async def run_agent() -> dict:
         await _record_trace(
             run_id, step, "llm_call", "code_generator", {"prompt_length": len(gen_prompt)}
         )
-        resp = await client.generate("llama3.1", gen_prompt)
+        resp = await client.generate(os.getenv("ORBIT_MODEL", "qwen3.5:4b"), gen_prompt)
         code = resp.get("response", "")
         await guard.scan_output(run_id, code)
         await _record_trace(
