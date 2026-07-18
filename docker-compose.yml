@@ -8,16 +8,17 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./orbit.db:/app/orbit.db
     environment:
       - ORBIT_DB_PATH=sqlite+aiosqlite:////app/orbit.db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # allows backend to reach host Ollama
 
   frontend:
     build:
       context: ./frontend
       dockerfile: ../docker/Dockerfile.frontend
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "80:80"
+    depends_on:
+      - backend

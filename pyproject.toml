@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "orbit"
 version = "0.1.0"
@@ -8,28 +12,79 @@ authors = [
     { name = "ORBIT Contributors" }
 ]
 license = { text = "MIT" }
+keywords = [
+    "llm", "agents", "observability", "langraph", "ollama",
+    "tracing", "replay", "security", "local-ai", "mlops"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Debuggers",
+]
 dependencies = [
     "aiosqlite>=0.22.1",
-    "fastapi>=0.138.0",
+    "fastapi>=0.115.0",
     "httpx>=0.28.1",
     "langgraph>=1.2.6",
-    "little-canary>=0.3.0",
-    "mypy>=2.1.0",
-    "ollama>=0.6.2",
-    "pydantic>=2.13.4",
-    "pytest>=9.1.1",
-    "pytest-asyncio>=1.4.0",
-    "ruff>=0.15.18",
-    "sqlalchemy>=2.0.51",
-    "structlog>=26.1.0",
-    "typer>=0.26.7",
-    "uvicorn>=0.49.0",
+    "pydantic>=2.10.0",
+    "sqlalchemy>=2.0.36",
+    "structlog>=24.4.0",
+    "typer>=0.12.0",
+    "uvicorn>=0.32.0",
+    "greenlet>=3.0.0",
+    "ollama>=0.4.0",
 ]
+
+[project.optional-dependencies]
+security = [
+    "little-canary>=0.3.0",
+]
+dev = [
+    "mypy>=1.13.0",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+    "httpx>=0.28.1",
 ]
 
 [project.urls]
 Homepage = "https://github.com/samvitgersappa/orbit"
 Repository = "https://github.com/samvitgersappa/orbit.git"
+Documentation = "https://github.com/samvitgersappa/orbit#readme"
+"Bug Tracker" = "https://github.com/samvitgersappa/orbit/issues"
 
 [project.scripts]
 orbit = "orbit.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/orbit"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "B008"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.13.0",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+]

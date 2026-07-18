@@ -1,9 +1,23 @@
+"""FastAPI application with lifespan handler."""
+
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from orbit.database.session import init_db
-from orbit.backend.api import router
 
-app = FastAPI(title="ORBIT", version="1.0.0")
+from orbit.backend.api import router
+from orbit.database.session import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+
+app = FastAPI(title="ORBIT", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,7 +28,3 @@ app.add_middleware(
 )
 
 app.include_router(router)
-
-@app.on_event("startup")
-async def on_startup():
-    await init_db()

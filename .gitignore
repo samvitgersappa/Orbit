@@ -1,10 +1,59 @@
-node_modules/
-dist/
-.env
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.pyz
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+*.dylib
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing
 .pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 .mypy_cache/
 .ruff_cache/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Database
 orbit.db
-.venv/
+*.db
+*.sqlite3
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/build/
+
+# uv
+uv.lock
+
+# Logs
+*.log
+logs/
