@@ -35,7 +35,9 @@
 
 I built ORBIT because debugging local LangGraph agents was genuinely painful. When something goes wrong — a hallucinated tool call, a silent failure, a prompt that gets injected — you're left staring at print statements.
 
-ORBIT gives you full visibility into what your agent actually did: every node, every LLM call, every tool invocation, timestamped and stored locally. It also scores each run with an ARI (Agent Reliability Index), lets you replay failures step by step, run models head-to-head in an Arena, and scans every prompt/response for security issues — all without sending anything to the cloud.
+ORBIT gives you full visibility into what your agent actually did. Every node, every LLM call, and every tool invocation is timestamped and stored locally. It also scores each run with an ARI (Agent Reliability Index), lets you replay failures step-by-step through a beautiful UI, and even lets you pit models against each other in an Arena.
+
+We also bake in security — scanning every prompt and response for injection or unsafe content — all without sending a single byte of your data to the cloud.
 
 It's built for Apple Silicon + Ollama, but works anywhere Python runs.
 
@@ -51,15 +53,29 @@ Nothing wrong with those tools. But they all require an account, send your trace
 
 **Tracing** — wraps any LangGraph agent with a single decorator. Every node execution, tool call, LLM prompt and response gets recorded with timing.
 
-**Failure Replay** — pick any past run and step through it one event at a time in the dashboard. Useful for understanding exactly where things went sideways.
+**Dynamic Model Loading** — Our CLI is smart. If you run a trace without specifying a model, it interactively prompts you to choose one from your local Ollama instance. Don't have it? ORBIT downloads it for you on the fly.
+
+**Failure Replay** — pick any past run and step through it one event at a time in the dashboard using our interactive Trace Stepper. Useful for understanding exactly where things went sideways.
 
 **ARI (Agent Reliability Index)** — a 0–100 score per run, weighted across task success, tool accuracy, hallucination, and latency. Gives you a quick gut-check on whether things are improving.
+
+**Rigorous Sandbox Testing** — ORBIT doesn't just check if your coding agent's python output parses; it injects hidden assertion suites (like edge-cases for Manacher's Algorithm) directly into the execution environment to truly test the LLM's logic.
 
 **Agent Arena** — run the same task across multiple models and compare results side by side. Good for deciding which model is actually worth using for a given job.
 
 **Security Guard** — every LLM call is checked for prompt injection (via Little Canary, runs locally) and unsafe content (via Llama Guard 3 through Ollama). Findings are tagged with OWASP LLM Top 10 categories.
 
 **Dashboard** — a React app with 8 pages: Overview, Runs, Failures, Arena, Replay, Models, Analytics, Security. All wired to the local FastAPI backend.
+
+---
+
+## The Arena (Example Run)
+
+Curious how different models perform? Here's an example of an Arena battle we ran between `qwen3.5:4b` and `llama3.2` across three extremely difficult 2026 reasoning tasks (Coding Manacher's Algorithm, Researching Quantization, and RAG). 
+
+As you can see, **llama3.2 swept the board**, claiming a much higher Agent Reliability Index (ARI) due to its insanely fast latency and robust logical structuring!
+
+![ORBIT Arena Dashboard](assets/arena.png)
 
 ---
 
@@ -94,7 +110,7 @@ uv run orbit serve
 # terminal 2
 cd frontend && npm run dev
 
-# terminal 3 — trace one of the example agents
+# terminal 3 — trace one of the example agents (it will ask you for a model!)
 uv run orbit trace src/orbit/examples/coding_agent.py
 ```
 
