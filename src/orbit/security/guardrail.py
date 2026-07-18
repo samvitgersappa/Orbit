@@ -1,9 +1,10 @@
-from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from orbit.database.models import SecurityEventRecord
 from orbit.database.session import AsyncSessionLocal
 from orbit.security.injection import PromptInjectionDetector
 from orbit.security.ollama_guard import LlamaGuard
+
 
 class SecurityGuard:
     def __init__(self):
@@ -18,7 +19,7 @@ class SecurityGuard:
         risk_type: str, 
         severity: int, 
         details: str,
-        owasp_category: Optional[str] = None
+        owasp_category: str | None = None
     ):
         async with AsyncSessionLocal() as session:
             event = SecurityEventRecord(
@@ -29,7 +30,7 @@ class SecurityGuard:
                 severity=severity,
                 details={"reason": details},
                 owasp_category=owasp_category,
-                created_at=datetime.now(timezone.utc)
+                created_at=datetime.now(UTC)
             )
             session.add(event)
             await session.commit()

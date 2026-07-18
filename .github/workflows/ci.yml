@@ -26,20 +26,23 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --all-extras
+        # Don't install the 'security' extra — little-canary has no Linux wheel
+        # and is not needed for linting or tests (import is handled gracefully)
+        run: uv sync --extra dev
 
-      - name: Lint with Ruff
+      - name: Lint
         run: uv run ruff check src/
 
-      - name: Format check with Ruff
+      - name: Format check
         run: uv run ruff format --check src/
 
-      - name: Type check with Mypy
+      - name: Type check
         run: uv run mypy src/ --ignore-missing-imports
 
-      - name: Run tests
+      - name: Tests
         run: uv run pytest tests/ -v --tb=short
-        continue-on-error: true  # tests require Ollama; don't block CI
+        env:
+          ORBIT_DB_PATH: "sqlite+aiosqlite:///./test_orbit.db"
 
   frontend:
     name: Frontend (Node.js)
@@ -55,12 +58,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install dependencies
         run: cd frontend && npm ci
 
-      - name: Lint frontend
+      - name: Lint
         run: cd frontend && npm run lint
         continue-on-error: true
 
-      - name: Build frontend
+      - name: Build
         run: cd frontend && npm run build

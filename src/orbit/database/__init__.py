@@ -1,15 +1,15 @@
 """Database: SQLAlchemy ORM models and session factory."""
 from orbit.database.models import (
-    Base,
-    ModelRecord,
     AgentRecord,
+    ArenaMatchRecord,
+    Base,
+    FailureRecord,
+    ModelRecord,
     RunRecord,
+    ScoreRecord,
+    SecurityEventRecord,
     ToolCallRecord,
     TraceRecord,
-    ScoreRecord,
-    FailureRecord,
-    ArenaMatchRecord,
-    SecurityEventRecord,
 )
 from orbit.database.session import AsyncSessionLocal, engine, get_db, init_db
 

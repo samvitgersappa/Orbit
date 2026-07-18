@@ -1,8 +1,9 @@
-from datetime import datetime, timezone
-from typing import Optional, List, Any
+from datetime import UTC, datetime
+from typing import Any
 
-from sqlalchemy import Integer, String, Boolean, Float, DateTime, ForeignKey, JSON
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
 
 class Base(DeclarativeBase):
     pass
@@ -12,9 +13,9 @@ class ModelRecord(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String)
     provider: Mapped[str] = mapped_column(String)
-    quantization: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    parameters: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    quantization: Mapped[str | None] = mapped_column(String, nullable=True)
+    parameters: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
 class AgentRecord(Base):
     __tablename__ = "agents"
@@ -22,7 +23,7 @@ class AgentRecord(Base):
     name: Mapped[str] = mapped_column(String)
     entrypoint: Mapped[str] = mapped_column(String)
     framework: Mapped[str] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
 class RunRecord(Base):
     __tablename__ = "runs"
@@ -31,17 +32,17 @@ class RunRecord(Base):
     task: Mapped[str] = mapped_column(String)
     model_name: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String)
-    success: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    duration_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    ari_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    success: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ari_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     
-    tool_calls: Mapped[List["ToolCallRecord"]] = relationship("ToolCallRecord", back_populates="run")
-    traces: Mapped[List["TraceRecord"]] = relationship("TraceRecord", back_populates="run")
-    scores: Mapped[List["ScoreRecord"]] = relationship("ScoreRecord", back_populates="run")
-    failures: Mapped[List["FailureRecord"]] = relationship("FailureRecord", back_populates="run")
-    security_events: Mapped[List["SecurityEventRecord"]] = relationship("SecurityEventRecord", back_populates="run")
+    tool_calls: Mapped[list["ToolCallRecord"]] = relationship("ToolCallRecord", back_populates="run")
+    traces: Mapped[list["TraceRecord"]] = relationship("TraceRecord", back_populates="run")
+    scores: Mapped[list["ScoreRecord"]] = relationship("ScoreRecord", back_populates="run")
+    failures: Mapped[list["FailureRecord"]] = relationship("FailureRecord", back_populates="run")
+    security_events: Mapped[list["SecurityEventRecord"]] = relationship("SecurityEventRecord", back_populates="run")
 
 class ToolCallRecord(Base):
     __tablename__ = "tool_calls"
@@ -50,8 +51,8 @@ class ToolCallRecord(Base):
     tool_name: Mapped[str] = mapped_column(String)
     tool_input: Mapped[Any] = mapped_column(JSON)
     tool_output: Mapped[Any] = mapped_column(JSON, nullable=True)
-    duration_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    success: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    success: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     
     run: Mapped["RunRecord"] = relationship("RunRecord", back_populates="tool_calls")
 
@@ -61,9 +62,9 @@ class TraceRecord(Base):
     run_id: Mapped[int] = mapped_column(ForeignKey("runs.id"))
     step_number: Mapped[int] = mapped_column(Integer)
     event_type: Mapped[str] = mapped_column(String)
-    node_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    node_name: Mapped[str | None] = mapped_column(String, nullable=True)
     content: Mapped[Any] = mapped_column(JSON, nullable=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
     run: Mapped["RunRecord"] = relationship("RunRecord", back_populates="traces")
 
@@ -82,8 +83,8 @@ class FailureRecord(Base):
     run_id: Mapped[int] = mapped_column(ForeignKey("runs.id"))
     failure_type: Mapped[str] = mapped_column(String)
     root_cause: Mapped[str] = mapped_column(String)
-    recommendation: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    recommendation: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
     run: Mapped["RunRecord"] = relationship("RunRecord", back_populates="failures")
 
@@ -93,19 +94,19 @@ class ArenaMatchRecord(Base):
     task: Mapped[str] = mapped_column(String)
     winner_model_name: Mapped[str] = mapped_column(String)
     details: Mapped[Any] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
 class SecurityEventRecord(Base):
     __tablename__ = "security_events"
     id: Mapped[int] = mapped_column(primary_key=True)
     run_id: Mapped[int] = mapped_column(ForeignKey("runs.id"))
-    step_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    step_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     direction: Mapped[str] = mapped_column(String)
     detector: Mapped[str] = mapped_column(String)
     risk_type: Mapped[str] = mapped_column(String)
-    owasp_category: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    owasp_category: Mapped[str | None] = mapped_column(String, nullable=True)
     severity: Mapped[int] = mapped_column(Integer)
     details: Mapped[Any] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
     run: Mapped["RunRecord"] = relationship("RunRecord", back_populates="security_events")

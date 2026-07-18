@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import func, select
 
-from orbit.analytics.ari import ARIEvaluator
-from orbit.analytics.failures import FailureDetectionEngine
 from orbit.database.models import (
     ArenaMatchRecord,
     FailureRecord,
@@ -36,7 +34,7 @@ async def health_check() -> dict[str, Any]:
     client = OllamaClient()
     ollama_ok = await client.health_check()
     await client.close()
-    return {"status": "ok", "ollama": ollama_ok, "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "ok", "ollama": ollama_ok, "timestamp": datetime.now(UTC).isoformat()}
 
 
 # ---------------------------------------------------------------------------

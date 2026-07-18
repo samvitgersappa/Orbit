@@ -1,11 +1,13 @@
-from typing import List
-from datetime import datetime, timezone
-from orbit.database.models import ArenaMatchRecord, RunRecord
-from orbit.database.session import AsyncSessionLocal
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 
+from orbit.database.models import ArenaMatchRecord, RunRecord
+from orbit.database.session import AsyncSessionLocal
+
+
 class ArenaEngine:
-    async def run_battle(self, task: str, models: List[str]):
+    async def run_battle(self, task: str, models: list[str]):
         match_details = {}
         winner = None
         best_ari = -1.0
@@ -33,7 +35,7 @@ class ArenaEngine:
                     task=task,
                     winner_model_name=winner,
                     details=match_details,
-                    created_at=datetime.now(timezone.utc)
+                    created_at=datetime.now(UTC)
                 )
                 session.add(match)
                 await session.commit()

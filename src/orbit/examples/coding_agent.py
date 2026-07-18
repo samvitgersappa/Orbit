@@ -5,12 +5,13 @@ from __future__ import annotations
 import asyncio
 import time
 
+from sqlalchemy import select
+
 from orbit.database.models import RunRecord, ToolCallRecord, TraceRecord
 from orbit.database.session import AsyncSessionLocal
 from orbit.integrations.langgraph.trace import trace_agent
 from orbit.integrations.ollama.client import OllamaClient
 from orbit.security.guardrail import SecurityGuard
-from sqlalchemy import select
 
 
 async def _get_latest_run_id() -> int:

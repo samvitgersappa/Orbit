@@ -1,6 +1,8 @@
-from orbit.database.models import TraceRecord, ToolCallRecord
-from orbit.database.session import AsyncSessionLocal
 from sqlalchemy import select
+
+from orbit.database.models import TraceRecord
+from orbit.database.session import AsyncSessionLocal
+
 
 class ReplayEngine:
     async def get_replay_steps(self, run_id: int):

@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import subprocess
 import sys
-from typing import List, Optional
 
 import typer
 import uvicorn
@@ -92,7 +91,7 @@ def replay(
 @app.command()
 def battle(
     task: str = typer.Option(..., help="Task description to evaluate"),
-    models: List[str] = typer.Option(..., help="Models to pit against each other (repeat flag)"),
+    models: list[str] = typer.Option(..., help="Models to pit against each other (repeat flag)"),
 ) -> None:
     """Run Agent Arena: compare multiple models on the same task."""
 
@@ -209,7 +208,7 @@ def report(
 @app.command()
 def runs(
     limit: int = typer.Option(20, help="Number of recent runs to show"),
-    status: Optional[str] = typer.Option(None, help="Filter by status: running|success|failure"),
+    status: str | None = typer.Option(None, help="Filter by status: running|success|failure"),
 ) -> None:
     """List recent agent runs."""
 

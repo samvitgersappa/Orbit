@@ -1,13 +1,16 @@
+from sqlalchemy import select
+
 from orbit.database.models import RunRecord, ScoreRecord, ToolCallRecord
 from orbit.database.session import AsyncSessionLocal
-from sqlalchemy import select
+
 
 class ARIEvaluator:
     async def evaluate_run(self, run_id: int):
         async with AsyncSessionLocal() as session:
             result = await session.execute(select(RunRecord).where(RunRecord.id == run_id))
             run = result.scalar_one_or_none()
-            if not run: return
+            if not run:
+                return
 
             tool_result = await session.execute(select(ToolCallRecord).where(ToolCallRecord.run_id == run_id))
             tool_calls = tool_result.scalars().all()

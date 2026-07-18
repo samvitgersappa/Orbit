@@ -1,11 +1,12 @@
 import functools
-import asyncio
-from datetime import datetime, timezone
 import time
-from typing import Callable, Any, Coroutine
+from collections.abc import Callable, Coroutine
+from datetime import UTC, datetime
+from typing import Any
 
-from orbit.database.session import AsyncSessionLocal
 from orbit.database.models import RunRecord
+from orbit.database.session import AsyncSessionLocal
+
 
 def trace_agent(agent_name: str, task: str, model_name: str):
     """
@@ -36,7 +37,7 @@ def trace_agent(agent_name: str, task: str, model_name: str):
                     if run:
                         run.status = "success"
                         run.success = True
-                        run.finished_at = datetime.now(timezone.utc)
+                        run.finished_at = datetime.now(UTC)
                         run.duration_ms = int((time.time() - start_time) * 1000)
                     await session.commit()
                 
@@ -50,7 +51,7 @@ def trace_agent(agent_name: str, task: str, model_name: str):
                     if run:
                         run.status = "failure"
                         run.success = False
-                        run.finished_at = datetime.now(timezone.utc)
+                        run.finished_at = datetime.now(UTC)
                         run.duration_ms = int((time.time() - start_time) * 1000)
                     await session.commit()
                 raise e

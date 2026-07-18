@@ -1,5 +1,6 @@
+
 import httpx
-from typing import Tuple, Optional
+
 
 class LlamaGuard:
     def __init__(self, model_name: str = "llama-guard3", base_url: str = "http://localhost:11434"):
@@ -7,7 +8,7 @@ class LlamaGuard:
         self.base_url = base_url
         self.client = httpx.AsyncClient(base_url=self.base_url)
 
-    async def scan(self, role: str, text: str) -> Tuple[bool, Optional[str]]:
+    async def scan(self, role: str, text: str) -> tuple[bool, str | None]:
         """
         Returns (is_unsafe, category_details).
         LlamaGuard expects prompts in a specific format, but Ollama handles some of it.
