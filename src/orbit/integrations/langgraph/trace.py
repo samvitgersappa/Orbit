@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime
 from typing import Any
 
+from orbit.analytics.ari import ARIEvaluator
 from orbit.database.models import RunRecord
 from orbit.database.session import AsyncSessionLocal
 
@@ -42,6 +43,7 @@ def trace_agent(agent_name: str, task: str, model_name: str):
                 # In a full trace implementation, we would also extract
                 # LangGraph callbacks and populate traces/tool_calls here.
 
+                await ARIEvaluator().evaluate_run(run_id)
                 return result
             except Exception as e:
                 async with AsyncSessionLocal() as session:
@@ -52,6 +54,7 @@ def trace_agent(agent_name: str, task: str, model_name: str):
                         run.finished_at = datetime.now(UTC)
                         run.duration_ms = int((time.time() - start_time) * 1000)
                     await session.commit()
+                await ARIEvaluator().evaluate_run(run_id)
                 raise e
 
         return wrapper
