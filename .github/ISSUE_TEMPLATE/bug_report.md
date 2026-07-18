@@ -1,30 +1,22 @@
 ---
-name: Bug Report
-about: Report a bug to help us improve ORBIT
-title: '[BUG] '
+name: Bug report
+about: Something's broken
+title: ''
 labels: bug
 assignees: ''
 ---
 
-## Describe the Bug
-A clear and concise description of what the bug is.
+**What happened?**
 
-## Steps to Reproduce
-1. Run `orbit ...`
-2. See error
+**What did you expect?**
 
-## Expected Behavior
-What you expected to happen.
+**Steps to reproduce**
 
-## Actual Behavior
-What actually happened. Include full error output.
+**Environment**
+- OS:
+- Python:
+- ORBIT version:
+- Ollama version:
+- Models pulled:
 
-## Environment
-- OS: [e.g. macOS 15.x, Apple M4]
-- Python version: [e.g. 3.12.3]
-- ORBIT version: [e.g. 0.1.0]
-- Ollama version: [e.g. 0.5.0]
-- Models pulled: [e.g. llama3.1, llama-guard3]
-
-## Additional Context
-Any other context, logs, or screenshots.
+**Error output**

@@ -1,41 +1,21 @@
 # Security Policy
 
-## Supported Versions
+## Reporting a vulnerability
 
-| Version | Supported |
-|---------|-----------|
-| 0.1.x   | ✅ Yes     |
+If you find a security issue, please don't open a public GitHub issue. Instead, use the **GitHub Security Advisory** feature (Security tab → Report a vulnerability), or reach out privately through GitHub.
 
-## Reporting a Vulnerability
+Include what you found, how to reproduce it, and what impact you think it has. I'll acknowledge within 48 hours and aim to have a fix or response within a week.
 
-**Please do not report security vulnerabilities through public GitHub Issues.**
+## What's in scope
 
-If you discover a security vulnerability in ORBIT, please:
+ORBIT is a local-only tool — it doesn't run a public server or handle multiple users. The realistic attack surface is:
 
-1. Open a **GitHub Security Advisory** via the "Security" tab in the repository.
-2. Or email the maintainers privately via GitHub's contact mechanism.
+- `orbit trace` executes a user-supplied Python script, so there's an obvious arbitrary code execution path if someone tricks you into tracing a malicious file
+- prompt injection bypass — a crafted input that gets past Little Canary or Llama Guard without being flagged
+- unsanitized input reaching the SQLite layer via the API
 
-Please include:
-- A description of the vulnerability
-- Steps to reproduce
-- Potential impact assessment
-- Any suggested mitigations
+## Out of scope
 
-You can expect:
-- Acknowledgment within **48 hours**
-- A status update within **7 days**
-- Credit in the release notes (if desired)
-
-## Scope
-
-Given ORBIT is a **local-first tool with no network server**, the primary security concerns are:
-
-- Arbitrary code execution via the `orbit trace` command (runs user-provided Python scripts)
-- Prompt injection bypass in the Security Guard module
-- SQLite injection via unsanitized inputs to the API
-
-## Out of Scope
-
-- Vulnerabilities requiring physical access to the machine
-- Issues in third-party dependencies (please report to upstream)
-- Theoretical vulnerabilities without a proof of concept
+- anything requiring physical access to the machine
+- bugs in upstream dependencies (report those to the relevant project)
+- theoretical issues without a working proof of concept

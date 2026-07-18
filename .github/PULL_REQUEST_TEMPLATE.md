@@ -1,27 +1,14 @@
-## Summary
-_Describe what this PR does in 1-2 sentences._
+## What does this PR do?
 
-## Related Issues
+## Related issue (if any)
+
 Closes #
 
-## Changes Made
-- 
-- 
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Refactor / code quality
-- [ ] Test coverage
+## Changes
 
 ## Checklist
-- [ ] My code follows the project's style (ruff, mypy clean)
-- [ ] I've added/updated tests for my changes
-- [ ] I've updated documentation where needed
-- [ ] `uv run pytest` passes locally
-- [ ] `uv run ruff check .` is clean
-- [ ] `uv run mypy src` is clean
 
-## Screenshots / Output
-_If applicable, include terminal output or dashboard screenshots._
+- [ ] `uv run pytest` passes
+- [ ] `uv run ruff check src/` is clean
+- [ ] `uv run mypy src/` is clean
+- [ ] docs updated if needed

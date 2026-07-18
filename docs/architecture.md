@@ -1,113 +1,91 @@
-# ORBIT Architecture
+# Architecture
 
-## Overview
+## How it fits together
 
-ORBIT is structured as a pipeline of loosely coupled modules, each responsible for a single concern. This document describes the data flow, module responsibilities, and design decisions.
-
-## Data Flow
+When you run an agent with `@trace_agent`, here's what happens:
 
 ```
-Agent Script
+Agent script
     │
     ▼
-@trace_agent decorator (integrations/langgraph/trace.py)
+@trace_agent decorator
     │
-    ├──► SecurityGuard.scan_input()  ─► security_events DB
+    ├── SecurityGuard.scan_input()   →  writes to security_events
     │
-    ├──► OllamaClient (integrations/ollama/client.py)
-    │         │
-    │         └──► Ollama (local HTTP, port 11434)
+    ├── OllamaClient                 →  talks to Ollama at localhost:11434
     │
-    ├──► SecurityGuard.scan_output() ─► security_events DB
+    ├── SecurityGuard.scan_output()  →  writes to security_events
     │
-    ├──► TraceRecord emission        ─► traces DB
-    ├──► ToolCallRecord emission     ─► tool_calls DB
+    ├── TraceRecord                  →  writes to traces
+    ├── ToolCallRecord               →  writes to tool_calls
     │
     ▼
-RunRecord saved (runs DB)
+RunRecord (runs table)
     │
-    ├──► ARIEvaluator.evaluate_run() ─► scores DB, updates runs.ari_score
-    └──► FailureDetectionEngine.analyze_run() ─► failures DB
+    ├── ARIEvaluator.evaluate_run()  →  scores table, updates ari_score
+    └── FailureDetectionEngine       →  failures table
                 │
                 ▼
-        FastAPI backend (/runs, /metrics, /failures, /security/*, ...)
+        FastAPI backend
                 │
                 ▼
-        React Dashboard  (localhost:5173)
+        React dashboard (localhost:5173)
 ```
 
-## Module Responsibilities
+---
 
-### `integrations/langgraph/trace.py`
-- `@trace_agent(agent_name, task, model_name)` decorator
-- Creates a `RunRecord` at agent start
-- Records `success`, `duration_ms`, `finished_at` at completion
-- Agents call `_record_trace()` and `_record_tool()` internally for full observability
+## Modules
 
-### `integrations/ollama/client.py`
-- Async HTTP client wrapping the Ollama REST API
-- Methods: `list_models()`, `generate()`, `chat()`, `health_check()`, `close()`
+**`integrations/langgraph/trace.py`** — the `@trace_agent` decorator. Creates a run record at start, closes it with success/failure status at the end. Agents call `_record_trace()` and `_record_tool()` directly to emit events during execution.
 
-### `security/guardrail.py`
-- Orchestrates `PromptInjectionDetector` and `LlamaGuard`
-- `scan_input(run_id, text)` — checks before LLM call
-- `scan_output(run_id, text)` — checks after LLM response
-- Writes `SecurityEventRecord` rows with OWASP category mappings
+**`integrations/ollama/client.py`** — thin async HTTP wrapper around the Ollama API. Covers `list_models`, `generate`, `chat`, `health_check`.
 
-### `security/injection.py`
-- Wraps `little-canary` local injection detector
-- Returns `(is_injection: bool, reason: str | None)`
+**`security/guardrail.py`** — calls the injection detector and Llama Guard in sequence for every LLM call (both input and output). Writes `SecurityEventRecord` rows with OWASP category tags.
 
-### `security/ollama_guard.py`
-- Async wrapper around Llama Guard 3 served via Ollama
-- Returns `(is_unsafe: bool, categories: str | None)`
+**`security/injection.py`** — wraps Little Canary, returns `(bool, reason)`.
 
-### `analytics/ari.py`
-- `ARIEvaluator.evaluate_run(run_id)` — computes T/A/H/L scores
-- Persists to `scores` table; updates `runs.ari_score`
-- Formula: `ARI = 0.40*T + 0.25*A + 0.20*H + 0.15*L`
+**`security/ollama_guard.py`** — calls Llama Guard 3 via Ollama's generate API, parses the safe/unsafe response.
 
-### `analytics/failures.py`
-- `FailureDetectionEngine.analyze_run(run_id)` — post-run failure scan
-- Detects: tool_failure, timeout, empty_response (Phase 1)
-- Planned: hallucinated_tool, infinite_loop, low_confidence
+**`analytics/ari.py`** — computes the ARI after a run completes. Formula: `ARI = 0.40*T + 0.25*A + 0.20*H + 0.15*L`. Writes to the `scores` table and updates `runs.ari_score`.
 
-### `replay/engine.py`
-- `ReplayEngine.get_replay_steps(run_id)` — returns ordered trace steps
-- Used by CLI `orbit replay` and dashboard Replay page
+**`analytics/failures.py`** — post-run pass over traces and tool calls looking for known failure patterns. Currently catches tool_failure, timeout, and empty_response. More detectors are planned.
 
-### `arena/engine.py`
-- `ArenaEngine.run_battle(task, models)` — compares model ARI scores
-- Persists `ArenaMatchRecord`; returns winner and per-model details
+**`replay/engine.py`** — reads `traces` for a given run in step order. Used by both the CLI `orbit replay` command and the dashboard.
 
-### `backend/api/__init__.py`
-- FastAPI router with all spec endpoints
-- Dependency injects `AsyncSessionLocal` and `OllamaClient`
+**`arena/engine.py`** — looks up the most recent run for each model on a given task, compares ARI scores, picks a winner, writes an `ArenaMatchRecord`.
 
-### `cli/main.py`
-- Typer app with all 9 spec commands
-- `serve` wraps uvicorn; all others use `asyncio.run()` internally
+**`backend/api/__init__.py`** — single FastAPI router with all the API endpoints. No service layer abstraction currently; handlers call `AsyncSessionLocal` directly.
 
-## Database Schema
+**`cli/main.py`** — Typer app. Each command either calls uvicorn (serve) or wraps an async function with `asyncio.run()`.
 
-All persistence uses SQLAlchemy 2.0 async ORM with SQLite (via aiosqlite).
+---
 
-| Table | Purpose |
+## Database
+
+SQLAlchemy 2.0 async ORM, SQLite via aiosqlite. One file (`orbit.db` by default, configurable via `ORBIT_DB_PATH`).
+
+| Table | What's in it |
 |---|---|
-| `runs` | One row per agent execution |
-| `traces` | Ordered execution events per run |
-| `tool_calls` | Tool invocations with input/output/timing |
-| `scores` | ARI component scores per run |
-| `failures` | Detected failure patterns per run |
-| `arena_matches` | Battle results with per-model details JSON |
-| `security_events` | Security findings with OWASP mapping |
-| `models` | Registered model metadata |
-| `agents` | Registered agent metadata |
+| `runs` | one row per agent execution |
+| `traces` | ordered events within a run (node starts/ends, LLM calls) |
+| `tool_calls` | tool invocations with input, output, timing, success flag |
+| `scores` | ARI component scores (task_success, tool_accuracy, etc.) |
+| `failures` | detected failure patterns with root cause and recommendation |
+| `arena_matches` | battle results with per-model metrics as JSON |
+| `security_events` | injection/content findings with OWASP category |
+| `models` | registered model metadata |
+| `agents` | registered agent metadata |
 
-## Design Decisions
+---
 
-1. **Local-first**: No external API calls except to Ollama (localhost:11434). All data stays on device.
-2. **Async throughout**: FastAPI + SQLAlchemy async + httpx — no blocking I/O.
-3. **SQLite over PostgreSQL**: Zero-setup for local dev; spec explicitly targets single-machine use.
-4. **Security Guard as middleware**: Every LLM call goes through `scan_input` / `scan_output` — not opt-in.
-5. **Dependency injection via session factories**: `AsyncSessionLocal()` is used directly in handlers rather than FastAPI's `Depends()` to keep modules independently testable.
+## A few design choices worth noting
+
+**Everything local.** The only external HTTP call is to Ollama at `localhost:11434`. No analytics, no telemetry, nothing leaves the machine.
+
+**Async throughout.** FastAPI, SQLAlchemy, and httpx are all async. Avoids blocking the event loop on DB queries or model calls.
+
+**SQLite not Postgres.** Zero setup, zero config, works everywhere. The trade-off (no concurrent writes under load) doesn't matter for a single-user local tool.
+
+**Security scanning is always on.** `scan_input` and `scan_output` are called on every LLM interaction in the trace decorator — not opt-in per call. If Llama Guard or Little Canary isn't available, the errors are caught and the run continues.
+
+**No FastAPI Depends() for the DB session.** `AsyncSessionLocal()` is called directly in each handler. It's a bit repetitive but makes the modules independently testable without needing to wire up FastAPI's dependency injection.

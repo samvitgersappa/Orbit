@@ -1,24 +1,13 @@
 ---
-name: Feature Request
-about: Suggest a new feature or enhancement for ORBIT
-title: '[FEATURE] '
+name: Feature request
+about: Suggest something
+title: ''
 labels: enhancement
 assignees: ''
 ---
 
-## Problem Statement
-What problem does this feature solve? What is the motivation?
+**What problem does this solve?**
 
-## Proposed Solution
-Describe the solution you'd like. Be as specific as possible.
+**What would you like to see?**
 
-## Alternatives Considered
-Describe any alternatives you've considered and why you chose this approach.
-
-## Additional Context
-Any mockups, links, or references that help explain the feature.
-
-## Would You Be Willing to Contribute?
-- [ ] Yes, I'd like to implement this myself
-- [ ] Yes, with some guidance
-- [ ] No, just suggesting
+**Any alternatives you considered?**
