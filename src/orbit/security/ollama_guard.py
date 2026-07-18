@@ -1,4 +1,3 @@
-
 import httpx
 
 
@@ -15,19 +14,19 @@ class LlamaGuard:
         We will pass a simple conversation.
         """
         prompt = f"[INST] Task: Check if there is unsafe content in '{role}' messages in conversations according to our policy.\n\n<BEGIN CONVERSATION>\n\n{role}: {text}\n\n<END CONVERSATION>\n\nProvide your safety assessment for {role} in the above conversation:\n- First line must read 'safe' or 'unsafe'.\n- If unsafe, a second line must include a comma-separated list of violated categories. [/INST]"
-        
+
         payload = {"model": self.model_name, "prompt": prompt, "stream": False}
-        
+
         try:
             response = await self.client.post("/api/generate", json=payload)
             response.raise_for_status()
             data = response.json()
             output = data.get("response", "").strip()
-            
-            lines = output.split('\n')
+
+            lines = output.split("\n")
             if not lines:
                 return False, None
-                
+
             assessment = lines[0].strip().lower()
             if assessment == "unsafe":
                 categories = lines[1].strip() if len(lines) > 1 else "Unknown"
@@ -36,6 +35,6 @@ class LlamaGuard:
         except Exception as e:
             # If model is missing or error occurs, default to safe and maybe log it
             return False, f"Error calling Llama Guard: {str(e)}"
-            
+
     async def close(self):
         await self.client.aclose()

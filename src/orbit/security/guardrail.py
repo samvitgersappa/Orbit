@@ -12,14 +12,14 @@ class SecurityGuard:
         self.llama_guard = LlamaGuard()
 
     async def _record_event(
-        self, 
-        run_id: int, 
-        direction: str, 
-        detector: str, 
-        risk_type: str, 
-        severity: int, 
+        self,
+        run_id: int,
+        direction: str,
+        detector: str,
+        risk_type: str,
+        severity: int,
         details: str,
-        owasp_category: str | None = None
+        owasp_category: str | None = None,
     ):
         async with AsyncSessionLocal() as session:
             event = SecurityEventRecord(
@@ -30,7 +30,7 @@ class SecurityGuard:
                 severity=severity,
                 details={"reason": details},
                 owasp_category=owasp_category,
-                created_at=datetime.now(UTC)
+                created_at=datetime.now(UTC),
             )
             session.add(event)
             await session.commit()
@@ -46,7 +46,7 @@ class SecurityGuard:
                 risk_type="prompt_injection",
                 severity=9,
                 details=reason or "Detected prompt injection attempt",
-                owasp_category="LLM01: Prompt Injection"
+                owasp_category="LLM01: Prompt Injection",
             )
 
         # 2. Content Safety (Toxicity/Unsafe)
@@ -59,7 +59,7 @@ class SecurityGuard:
                 risk_type="unsafe_content",
                 severity=7,
                 details=f"Unsafe categories: {categories}",
-                owasp_category="LLM07: Insecure Plugin Design / Unsafe Content"
+                owasp_category="LLM07: Insecure Plugin Design / Unsafe Content",
             )
 
     async def scan_output(self, run_id: int, text: str):
@@ -73,5 +73,5 @@ class SecurityGuard:
                 risk_type="unsafe_content",
                 severity=8,
                 details=f"Unsafe categories: {categories}",
-                owasp_category="LLM06: Sensitive Information Disclosure"
+                owasp_category="LLM06: Sensitive Information Disclosure",
             )

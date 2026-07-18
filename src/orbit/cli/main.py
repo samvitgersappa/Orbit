@@ -20,6 +20,7 @@ app = typer.Typer(
 # serve
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def serve(
     host: str = typer.Option("0.0.0.0", help="Host to bind to"),
@@ -34,6 +35,7 @@ def serve(
 # ---------------------------------------------------------------------------
 # trace
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def trace(
@@ -53,6 +55,7 @@ def trace(
 # replay
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def replay(
     run_id: int = typer.Argument(..., help="Run ID to replay"),
@@ -61,6 +64,7 @@ def replay(
 
     async def _replay() -> None:
         from orbit.replay.engine import ReplayEngine
+
         engine = ReplayEngine()
         steps = await engine.get_replay_steps(run_id)
         if not steps:
@@ -88,6 +92,7 @@ def replay(
 # battle
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def battle(
     task: str = typer.Option(..., help="Task description to evaluate"),
@@ -97,6 +102,7 @@ def battle(
 
     async def _battle() -> None:
         from orbit.arena.engine import ArenaEngine
+
         typer.echo(f"\n🏟️  Agent Arena: {task!r}")
         typer.echo(f"   Models: {', '.join(models)}\n")
         engine = ArenaEngine()
@@ -125,6 +131,7 @@ def battle(
 # ---------------------------------------------------------------------------
 # report
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def report(
@@ -172,7 +179,11 @@ def report(
         typer.echo(f"  Model    : {run.model_name}")
         typer.echo(f"  Status   : {status_icon} {run.status}")
         typer.echo(f"  Duration : {run.duration_ms} ms" if run.duration_ms else "  Duration : —")
-        typer.echo(f"\n  ARI Score: {run.ari_score:.1f}" if run.ari_score is not None else "\n  ARI Score: N/A")
+        typer.echo(
+            f"\n  ARI Score: {run.ari_score:.1f}"
+            if run.ari_score is not None
+            else "\n  ARI Score: N/A"
+        )
 
         if scores:
             typer.echo("\n  ARI Components:")
@@ -205,6 +216,7 @@ def report(
 # runs
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def runs(
     limit: int = typer.Option(20, help="Number of recent runs to show"),
@@ -229,13 +241,19 @@ def runs(
             typer.echo("No runs found.")
             return
 
-        typer.echo(f"\n{'ID':>5}  {'Agent':<20} {'Model':<15} {'Status':<10} {'ARI':>6}  {'Duration':>10}")
+        typer.echo(
+            f"\n{'ID':>5}  {'Agent':<20} {'Model':<15} {'Status':<10} {'ARI':>6}  {'Duration':>10}"
+        )
         typer.echo("─" * 72)
         for r in all_runs:
             ari = f"{r.ari_score:.1f}" if r.ari_score is not None else "—"
             dur = f"{r.duration_ms} ms" if r.duration_ms else "—"
-            st = {"success": "✅ success", "failure": "❌ failure", "running": "⏳ running"}.get(r.status, r.status)
-            typer.echo(f"{r.id:>5}  {r.agent_name:<20} {r.model_name:<15} {st:<10} {ari:>6}  {dur:>10}")
+            st = {"success": "✅ success", "failure": "❌ failure", "running": "⏳ running"}.get(
+                r.status, r.status
+            )
+            typer.echo(
+                f"{r.id:>5}  {r.agent_name:<20} {r.model_name:<15} {st:<10} {ari:>6}  {dur:>10}"
+            )
 
     asyncio.run(_runs())
 
@@ -243,6 +261,7 @@ def runs(
 # ---------------------------------------------------------------------------
 # models
 # ---------------------------------------------------------------------------
+
 
 @app.command()
 def models() -> None:
@@ -292,6 +311,7 @@ def models() -> None:
 # security
 # ---------------------------------------------------------------------------
 
+
 @app.command()
 def security(
     run_id: int = typer.Argument(..., help="Run ID to inspect security events for"),
@@ -317,7 +337,9 @@ def security(
             return
 
         typer.echo(f"\n🛡️  Security Events for Run #{run_id}  ({len(events)} total)\n")
-        typer.echo(f"{'#':>4}  {'Direction':<10} {'Detector':<18} {'Risk Type':<22} {'OWASP':<30} {'Sev':>4}")
+        typer.echo(
+            f"{'#':>4}  {'Direction':<10} {'Detector':<18} {'Risk Type':<22} {'OWASP':<30} {'Sev':>4}"
+        )
         typer.echo("─" * 92)
         for i, e in enumerate(events, 1):
             owasp = (e.owasp_category or "")[:28]
@@ -331,6 +353,7 @@ def security(
 # ---------------------------------------------------------------------------
 # security-summary
 # ---------------------------------------------------------------------------
+
 
 @app.command(name="security-summary")
 def security_summary() -> None:
@@ -359,7 +382,9 @@ def security_summary() -> None:
             by_risk[e.risk_type] = by_risk.get(e.risk_type, 0) + 1
             affected.add(e.run_id)
 
-        typer.echo(f"\n🛡️  Security Summary  —  {len(events)} total events, {len(affected)} affected runs\n")
+        typer.echo(
+            f"\n🛡️  Security Summary  —  {len(events)} total events, {len(affected)} affected runs\n"
+        )
         typer.echo("OWASP Categories:")
         for cat, count in sorted(by_owasp.items(), key=lambda x: -x[1]):
             bar = "█" * count

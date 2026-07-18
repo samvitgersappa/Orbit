@@ -7,6 +7,7 @@ class PromptInjectionDetector:
     def __init__(self) -> None:
         try:
             from little_canary import CanaryDetector  # type: ignore[import]
+
             self._detector = CanaryDetector()
             self._available = True
         except ImportError:

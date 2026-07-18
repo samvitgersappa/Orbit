@@ -8,6 +8,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 class Base(DeclarativeBase):
     pass
 
+
 class ModelRecord(Base):
     __tablename__ = "models"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -17,6 +18,7 @@ class ModelRecord(Base):
     parameters: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
+
 class AgentRecord(Base):
     __tablename__ = "agents"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -24,6 +26,7 @@ class AgentRecord(Base):
     entrypoint: Mapped[str] = mapped_column(String)
     framework: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+
 
 class RunRecord(Base):
     __tablename__ = "runs"
@@ -37,12 +40,17 @@ class RunRecord(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     ari_score: Mapped[float | None] = mapped_column(Float, nullable=True)
-    
-    tool_calls: Mapped[list["ToolCallRecord"]] = relationship("ToolCallRecord", back_populates="run")
+
+    tool_calls: Mapped[list["ToolCallRecord"]] = relationship(
+        "ToolCallRecord", back_populates="run"
+    )
     traces: Mapped[list["TraceRecord"]] = relationship("TraceRecord", back_populates="run")
     scores: Mapped[list["ScoreRecord"]] = relationship("ScoreRecord", back_populates="run")
     failures: Mapped[list["FailureRecord"]] = relationship("FailureRecord", back_populates="run")
-    security_events: Mapped[list["SecurityEventRecord"]] = relationship("SecurityEventRecord", back_populates="run")
+    security_events: Mapped[list["SecurityEventRecord"]] = relationship(
+        "SecurityEventRecord", back_populates="run"
+    )
+
 
 class ToolCallRecord(Base):
     __tablename__ = "tool_calls"
@@ -53,8 +61,9 @@ class ToolCallRecord(Base):
     tool_output: Mapped[Any] = mapped_column(JSON, nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     success: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
-    
+
     run: Mapped["RunRecord"] = relationship("RunRecord", back_populates="tool_calls")
+
 
 class TraceRecord(Base):
     __tablename__ = "traces"
@@ -68,6 +77,7 @@ class TraceRecord(Base):
 
     run: Mapped["RunRecord"] = relationship("RunRecord", back_populates="traces")
 
+
 class ScoreRecord(Base):
     __tablename__ = "scores"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -76,6 +86,7 @@ class ScoreRecord(Base):
     value: Mapped[float] = mapped_column(Float)
 
     run: Mapped["RunRecord"] = relationship("RunRecord", back_populates="scores")
+
 
 class FailureRecord(Base):
     __tablename__ = "failures"
@@ -88,6 +99,7 @@ class FailureRecord(Base):
 
     run: Mapped["RunRecord"] = relationship("RunRecord", back_populates="failures")
 
+
 class ArenaMatchRecord(Base):
     __tablename__ = "arena_matches"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -95,6 +107,7 @@ class ArenaMatchRecord(Base):
     winner_model_name: Mapped[str] = mapped_column(String)
     details: Mapped[Any] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+
 
 class SecurityEventRecord(Base):
     __tablename__ = "security_events"

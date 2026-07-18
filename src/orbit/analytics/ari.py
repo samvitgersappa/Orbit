@@ -12,7 +12,9 @@ class ARIEvaluator:
             if not run:
                 return
 
-            tool_result = await session.execute(select(ToolCallRecord).where(ToolCallRecord.run_id == run_id))
+            tool_result = await session.execute(
+                select(ToolCallRecord).where(ToolCallRecord.run_id == run_id)
+            )
             tool_calls = tool_result.scalars().all()
 
             # 1. Task Success (T)
@@ -42,9 +44,9 @@ class ARIEvaluator:
                 ScoreRecord(run_id=run_id, metric_name="task_success", value=t_score),
                 ScoreRecord(run_id=run_id, metric_name="tool_accuracy", value=a_score),
                 ScoreRecord(run_id=run_id, metric_name="hallucination_score", value=h_score),
-                ScoreRecord(run_id=run_id, metric_name="latency_score", value=l_score)
+                ScoreRecord(run_id=run_id, metric_name="latency_score", value=l_score),
             ]
-            
+
             run.ari_score = ari
             session.add_all(scores)
             await session.commit()

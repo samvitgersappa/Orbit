@@ -33,7 +33,9 @@ async def _record_trace(run_id: int, step: int, event_type: str, node: str, cont
         await session.commit()
 
 
-async def _record_tool_call(run_id: int, name: str, inp: dict, out: dict, success: bool, ms: int) -> None:
+async def _record_tool_call(
+    run_id: int, name: str, inp: dict, out: dict, success: bool, ms: int
+) -> None:
     async with AsyncSessionLocal() as session:
         tc = ToolCallRecord(
             run_id=run_id,
@@ -73,8 +75,11 @@ async def run_agent() -> dict:
         await guard.scan_output(run_id, answer)
 
         await _record_trace(
-            run_id, step, "node_end", "query_formulator",
-            {"query": query, "response_preview": answer[:200]}
+            run_id,
+            step,
+            "node_end",
+            "query_formulator",
+            {"query": query, "response_preview": answer[:200]},
         )
 
         # --- Node 2: Tool — web_search (simulated) ---
@@ -91,17 +96,23 @@ async def run_agent() -> dict:
         search_ms = int((time.time() - t0) * 1000)
         search_result = search_response.get("response", "")
         await _record_tool_call(
-            run_id, "web_search",
+            run_id,
+            "web_search",
             {"query": query},
             {"results": search_result[:500]},
-            True, search_ms,
+            True,
+            search_ms,
         )
-        await _record_trace(run_id, step, "node_end", "web_search", {"results_preview": search_result[:200]})
+        await _record_trace(
+            run_id, step, "node_end", "web_search", {"results_preview": search_result[:200]}
+        )
 
         # --- Node 3: Synthesis ---
         step += 1
         synth_prompt = f"Based on these research findings:\n{search_result}\n\nWrite a concise 2-paragraph executive summary."
-        await _record_trace(run_id, step, "node_start", "synthesizer", {"input_length": len(search_result)})
+        await _record_trace(
+            run_id, step, "node_start", "synthesizer", {"input_length": len(search_result)}
+        )
 
         synth_response = await client.generate("llama3.1", synth_prompt)
         summary = synth_response.get("response", "")

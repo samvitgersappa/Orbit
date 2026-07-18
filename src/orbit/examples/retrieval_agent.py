@@ -19,22 +19,22 @@ _LOCAL_DOCS = [
         "id": "doc_1",
         "title": "Introduction to LangGraph",
         "content": "LangGraph is a library for building stateful, multi-actor applications with LLMs. "
-                   "It models agent workflows as directed graphs where nodes are processing steps "
-                   "and edges control flow between them.",
+        "It models agent workflows as directed graphs where nodes are processing steps "
+        "and edges control flow between them.",
     },
     {
         "id": "doc_2",
         "title": "Ollama Local Inference",
         "content": "Ollama allows you to run large language models locally. It supports models like "
-                   "Llama 3.1, Qwen 2.5, and Gemma 3. Models are downloaded once and run entirely "
-                   "on your machine without any cloud dependencies.",
+        "Llama 3.1, Qwen 2.5, and Gemma 3. Models are downloaded once and run entirely "
+        "on your machine without any cloud dependencies.",
     },
     {
         "id": "doc_3",
         "title": "ORBIT Security Guard",
         "content": "ORBIT's Security Guard scans every LLM input and output. It uses Little Canary "
-                   "for prompt injection detection and Llama Guard 3 for content safety classification "
-                   "against the OWASP Top 10 for LLM Applications.",
+        "for prompt injection detection and Llama Guard 3 for content safety classification "
+        "against the OWASP Top 10 for LLM Applications.",
     },
 ]
 
@@ -49,19 +49,27 @@ async def _get_latest_run_id() -> int:
 async def _record_trace(run_id: int, step: int, event_type: str, node: str, content: dict) -> None:
     async with AsyncSessionLocal() as session:
         trace = TraceRecord(
-            run_id=run_id, step_number=step,
-            event_type=event_type, node_name=node, content=content,
+            run_id=run_id,
+            step_number=step,
+            event_type=event_type,
+            node_name=node,
+            content=content,
         )
         session.add(trace)
         await session.commit()
 
 
-async def _record_tool(run_id: int, name: str, inp: dict, out: dict, success: bool, ms: int) -> None:
+async def _record_tool(
+    run_id: int, name: str, inp: dict, out: dict, success: bool, ms: int
+) -> None:
     async with AsyncSessionLocal() as session:
         tc = ToolCallRecord(
-            run_id=run_id, tool_name=name,
-            tool_input=inp, tool_output=out,
-            success=success, duration_ms=ms,
+            run_id=run_id,
+            tool_name=name,
+            tool_input=inp,
+            tool_output=out,
+            success=success,
+            duration_ms=ms,
         )
         session.add(tc)
         await session.commit()
@@ -108,10 +116,12 @@ async def run_agent() -> dict:
         docs = _retrieve(question)
         ret_ms = int((time.time() - t0) * 1000)
         await _record_tool(
-            run_id, "local_retriever",
+            run_id,
+            "local_retriever",
             {"query": question, "top_k": 2},
             {"docs": [d["id"] for d in docs], "count": len(docs)},
-            True, ret_ms,
+            True,
+            ret_ms,
         )
         context = "\n\n".join(f"### {d['title']}\n{d['content']}" for d in docs)
         await _record_trace(run_id, step, "node_end", "retriever", {"retrieved_docs": len(docs)})
@@ -123,11 +133,15 @@ async def run_agent() -> dict:
             f"Context:\n{context}\n\n"
             f"Question: {question}\n\nAnswer:"
         )
-        await _record_trace(run_id, step, "node_start", "answer_generator", {"context_length": len(context)})
+        await _record_trace(
+            run_id, step, "node_start", "answer_generator", {"context_length": len(context)}
+        )
         resp = await client.generate("llama3.1", rag_prompt)
         answer = resp.get("response", "")
         await guard.scan_output(run_id, answer)
-        await _record_trace(run_id, step, "node_end", "answer_generator", {"answer_preview": answer[:300]})
+        await _record_trace(
+            run_id, step, "node_end", "answer_generator", {"answer_preview": answer[:300]}
+        )
 
         print("Retrieval Agent completed successfully.")
         print(f"Answer: {answer[:400]}")

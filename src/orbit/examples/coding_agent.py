@@ -24,19 +24,27 @@ async def _get_latest_run_id() -> int:
 async def _record_trace(run_id: int, step: int, event_type: str, node: str, content: dict) -> None:
     async with AsyncSessionLocal() as session:
         trace = TraceRecord(
-            run_id=run_id, step_number=step,
-            event_type=event_type, node_name=node, content=content,
+            run_id=run_id,
+            step_number=step,
+            event_type=event_type,
+            node_name=node,
+            content=content,
         )
         session.add(trace)
         await session.commit()
 
 
-async def _record_tool(run_id: int, name: str, inp: dict, out: dict, success: bool, ms: int) -> None:
+async def _record_tool(
+    run_id: int, name: str, inp: dict, out: dict, success: bool, ms: int
+) -> None:
     async with AsyncSessionLocal() as session:
         tc = ToolCallRecord(
-            run_id=run_id, tool_name=name,
-            tool_input=inp, tool_output=out,
-            success=success, duration_ms=ms,
+            run_id=run_id,
+            tool_name=name,
+            tool_input=inp,
+            tool_output=out,
+            success=success,
+            duration_ms=ms,
         )
         session.add(tc)
         await session.commit()
@@ -85,11 +93,15 @@ async def run_agent() -> dict:
             f"{task}\n\nProvide ONLY the Python function definition and a brief test call. "
             "No markdown, no explanation."
         )
-        await _record_trace(run_id, step, "llm_call", "code_generator", {"prompt_length": len(gen_prompt)})
+        await _record_trace(
+            run_id, step, "llm_call", "code_generator", {"prompt_length": len(gen_prompt)}
+        )
         resp = await client.generate("llama3.1", gen_prompt)
         code = resp.get("response", "")
         await guard.scan_output(run_id, code)
-        await _record_trace(run_id, step, "node_end", "code_generator", {"code_preview": code[:300]})
+        await _record_trace(
+            run_id, step, "node_end", "code_generator", {"code_preview": code[:300]}
+        )
 
         # --- Node 3: Code execution tool ---
         step += 1
@@ -98,12 +110,16 @@ async def run_agent() -> dict:
         success, output = _run_code_test(code)
         exec_ms = int((time.time() - t0) * 1000)
         await _record_tool(
-            run_id, "code_executor",
+            run_id,
+            "code_executor",
             {"code": code[:500]},
             {"output": output, "success": success},
-            success, exec_ms,
+            success,
+            exec_ms,
         )
-        await _record_trace(run_id, step, "node_end", "code_executor", {"success": success, "output": output})
+        await _record_trace(
+            run_id, step, "node_end", "code_executor", {"success": success, "output": output}
+        )
 
         # --- Node 4: Result reporting ---
         step += 1

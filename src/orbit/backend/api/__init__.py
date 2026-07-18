@@ -28,6 +28,7 @@ router = APIRouter()
 # Health
 # ---------------------------------------------------------------------------
 
+
 @router.get("/health")
 async def health_check() -> dict[str, Any]:
     """Return service health and Ollama connectivity."""
@@ -41,13 +42,12 @@ async def health_check() -> dict[str, Any]:
 # Runs
 # ---------------------------------------------------------------------------
 
+
 @router.get("/runs")
 async def get_runs() -> list[dict[str, Any]]:
     """List all runs ordered by most recent."""
     async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(RunRecord).order_by(RunRecord.started_at.desc())
-        )
+        result = await session.execute(select(RunRecord).order_by(RunRecord.started_at.desc()))
         runs = result.scalars().all()
         return [
             {
@@ -75,7 +75,9 @@ async def get_run(run_id: int) -> dict[str, Any]:
             raise HTTPException(status_code=404, detail="Run not found")
 
         traces_res = await session.execute(
-            select(TraceRecord).where(TraceRecord.run_id == run_id).order_by(TraceRecord.step_number)
+            select(TraceRecord)
+            .where(TraceRecord.run_id == run_id)
+            .order_by(TraceRecord.step_number)
         )
         traces = traces_res.scalars().all()
 
@@ -84,9 +86,7 @@ async def get_run(run_id: int) -> dict[str, Any]:
         )
         tools = tools_res.scalars().all()
 
-        scores_res = await session.execute(
-            select(ScoreRecord).where(ScoreRecord.run_id == run_id)
-        )
+        scores_res = await session.execute(select(ScoreRecord).where(ScoreRecord.run_id == run_id))
         scores = scores_res.scalars().all()
 
         failures_res = await session.execute(
@@ -213,6 +213,7 @@ async def get_run_replay(run_id: int) -> dict[str, Any]:
 # Failures
 # ---------------------------------------------------------------------------
 
+
 @router.get("/failures")
 async def get_failures() -> list[dict[str, Any]]:
     """List all detected failures ordered by most recent."""
@@ -238,6 +239,7 @@ async def get_failures() -> list[dict[str, Any]]:
 # Arena
 # ---------------------------------------------------------------------------
 
+
 @router.get("/arena")
 async def get_arena() -> dict[str, Any]:
     """Return arena matches and model leaderboard."""
@@ -258,12 +260,19 @@ async def get_arena() -> dict[str, Any]:
             if isinstance(m.details, dict):
                 for model_name, details in m.details.items():
                     if model_name not in leaderboard:
-                        leaderboard[model_name] = {"model": model_name, "wins": 0, "matches": 0, "avg_ari": 0.0}
+                        leaderboard[model_name] = {
+                            "model": model_name,
+                            "wins": 0,
+                            "matches": 0,
+                            "avg_ari": 0.0,
+                        }
                     leaderboard[model_name]["matches"] += 1
                     if isinstance(details, dict) and "ari" in details:
                         prev = leaderboard[model_name].get("avg_ari", 0.0)
                         count = leaderboard[model_name]["matches"]
-                        leaderboard[model_name]["avg_ari"] = (prev * (count - 1) + details["ari"]) / count
+                        leaderboard[model_name]["avg_ari"] = (
+                            prev * (count - 1) + details["ari"]
+                        ) / count
 
         return {
             "matches": [
@@ -276,13 +285,16 @@ async def get_arena() -> dict[str, Any]:
                 }
                 for m in matches
             ],
-            "leaderboard": sorted(leaderboard.values(), key=lambda x: x.get("wins", 0), reverse=True),
+            "leaderboard": sorted(
+                leaderboard.values(), key=lambda x: x.get("wins", 0), reverse=True
+            ),
         }
 
 
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
+
 
 @router.get("/models")
 async def get_models() -> dict[str, Any]:
@@ -318,6 +330,7 @@ async def get_models() -> dict[str, Any]:
 # Metrics / Analytics
 # ---------------------------------------------------------------------------
 
+
 @router.get("/metrics")
 async def get_metrics() -> dict[str, Any]:
     """Return aggregated ARI, success rates, and reliability metrics."""
@@ -351,14 +364,14 @@ async def get_metrics() -> dict[str, Any]:
             select(func.count()).select_from(RunRecord).where(RunRecord.ari_score >= 85)
         )
         good_res = await session.execute(
-            select(func.count()).select_from(RunRecord).where(
-                RunRecord.ari_score >= 70, RunRecord.ari_score < 85
-            )
+            select(func.count())
+            .select_from(RunRecord)
+            .where(RunRecord.ari_score >= 70, RunRecord.ari_score < 85)
         )
         fair_res = await session.execute(
-            select(func.count()).select_from(RunRecord).where(
-                RunRecord.ari_score >= 50, RunRecord.ari_score < 70
-            )
+            select(func.count())
+            .select_from(RunRecord)
+            .where(RunRecord.ari_score >= 50, RunRecord.ari_score < 70)
         )
         poor_res = await session.execute(
             select(func.count()).select_from(RunRecord).where(RunRecord.ari_score < 50)
@@ -385,6 +398,7 @@ async def get_metrics() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Security
 # ---------------------------------------------------------------------------
+
 
 @router.get("/security/events")
 async def get_security_events() -> list[dict[str, Any]]:

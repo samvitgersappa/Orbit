@@ -13,25 +13,23 @@ def trace_agent(agent_name: str, task: str, model_name: str):
     Decorator to trace a LangGraph agent's execution.
     Creates a Run record and records start/end status.
     """
+
     def decorator(func: Callable[..., Coroutine[Any, Any, Any]]):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             async with AsyncSessionLocal() as session:
                 new_run = RunRecord(
-                    agent_name=agent_name,
-                    task=task,
-                    model_name=model_name,
-                    status="running"
+                    agent_name=agent_name, task=task, model_name=model_name, status="running"
                 )
                 session.add(new_run)
                 await session.commit()
                 await session.refresh(new_run)
                 run_id = new_run.id
-                
+
             start_time = time.time()
             try:
                 result = await func(*args, **kwargs)
-                
+
                 async with AsyncSessionLocal() as session:
                     run = await session.get(RunRecord, run_id)
                     if run:
@@ -40,10 +38,10 @@ def trace_agent(agent_name: str, task: str, model_name: str):
                         run.finished_at = datetime.now(UTC)
                         run.duration_ms = int((time.time() - start_time) * 1000)
                     await session.commit()
-                
-                # In a full trace implementation, we would also extract 
+
+                # In a full trace implementation, we would also extract
                 # LangGraph callbacks and populate traces/tool_calls here.
-                
+
                 return result
             except Exception as e:
                 async with AsyncSessionLocal() as session:
@@ -55,5 +53,7 @@ def trace_agent(agent_name: str, task: str, model_name: str):
                         run.duration_ms = int((time.time() - start_time) * 1000)
                     await session.commit()
                 raise e
+
         return wrapper
+
     return decorator
