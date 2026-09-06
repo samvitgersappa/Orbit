@@ -42,7 +42,7 @@ RunRecord (runs table)
 
 **`security/guardrail.py`** — calls the injection detector and Llama Guard in sequence for every LLM call (both input and output). Writes `SecurityEventRecord` rows with OWASP category tags.
 
-**`security/injection.py`** — wraps Little Canary, returns `(bool, reason)`.
+**`security/injection.py`** — wraps Little Canary's `SecurityPipeline` in advisory mode, running the sync library call off the event loop. `scan()` returns `(bool, reason)`; `scan_detailed()` adds a `status` of `ok` / `degraded` / `unavailable` / `error` so a canary that could not run is never recorded as a clean scan.
 
 **`security/ollama_guard.py`** — calls Llama Guard 3 via Ollama's generate API, parses the safe/unsafe response.
 
