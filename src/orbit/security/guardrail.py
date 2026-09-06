@@ -48,7 +48,7 @@ class SecurityGuard:
                 details=injection.reason or "Detected prompt injection attempt",
                 owasp_category="LLM01: Prompt Injection",
             )
-        if injection.status in ("degraded", "error"):
+        if injection.status in ("degraded", "unavailable", "error"):
             # Screening did not complete. Recorded independently of the
             # detection above — a structural hit does not mean the behavioral
             # layer ran, and the trace should not imply it did.
@@ -58,7 +58,12 @@ class SecurityGuard:
                 detector="little_canary",
                 risk_type="screening_degraded",
                 severity=3,
-                details=injection.reason or "Injection screening did not complete",
+                details=injection.reason
+                or (
+                    "Little Canary is unavailable; install the orbit[security] extra to enable screening."
+                    if injection.status == "unavailable"
+                    else "Injection screening did not complete"
+                ),
                 owasp_category="LLM01: Prompt Injection",
             )
 

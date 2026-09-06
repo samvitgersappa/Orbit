@@ -225,3 +225,16 @@ async def test_guardrail_records_nothing_for_screened_clean_input():
     await guard.scan_input(run_id=1, text="What is the capital of France?")
 
     assert guard.events == []
+
+
+async def test_guardrail_records_missing_dependency(monkeypatch):
+    """An optional detector that did not run is visible in the trace."""
+    monkeypatch.setitem(sys.modules, "little_canary", None)
+    guard = _RecordingGuard(PromptInjectionDetector())
+
+    await guard.scan_input(run_id=1, text="What is the capital of France?")
+
+    assert len(guard.events) == 1
+    assert guard.events[0]["risk_type"] == "screening_degraded"
+    assert "unavailable" in guard.events[0]["details"]
+    assert "orbit[security]" in guard.events[0]["details"]
