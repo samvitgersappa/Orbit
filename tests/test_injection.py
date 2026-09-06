@@ -238,3 +238,24 @@ async def test_guardrail_records_missing_dependency(monkeypatch):
     assert guard.events[0]["risk_type"] == "screening_degraded"
     assert "unavailable" in guard.events[0]["details"]
     assert "orbit[security]" in guard.events[0]["details"]
+
+
+async def test_scan_tuple_hides_degraded_reason_without_detection():
+    detector = _detector(FakeCanaryProbe(response="", success=False, error="Ollama unavailable"))
+
+    result = await detector.scan_detailed("What is the capital of France?")
+    assert result.status == "degraded"
+    assert result.reason
+    assert await detector.scan("What is the capital of France?") == (False, None)
+
+
+async def test_scan_tuple_hides_error_reason_without_detection():
+    class FailingPipeline:
+        def check(self, text):
+            raise RuntimeError("probe failed")
+
+    detector = PromptInjectionDetector(pipeline=FailingPipeline())
+    result = await detector.scan_detailed("hello")
+    assert result.status == "error"
+    assert result.reason
+    assert await detector.scan("hello") == (False, None)

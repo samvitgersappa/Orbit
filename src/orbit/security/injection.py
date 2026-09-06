@@ -95,7 +95,7 @@ class PromptInjectionDetector:
         use :meth:`scan_detailed` when the caller needs to tell those apart.
         """
         result = await self.scan_detailed(text)
-        return result.detected, result.reason
+        return result.detected, result.reason if result.detected else None
 
     async def scan_detailed(self, text: str) -> InjectionScanResult:
         """Scan text and return the full result, including screening status."""
