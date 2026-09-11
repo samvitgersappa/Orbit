@@ -127,6 +127,7 @@ async def run_agent() -> dict:
 
     finally:
         await client.close()
+        await guard.close()
 
 
 if __name__ == "__main__":

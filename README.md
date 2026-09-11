@@ -63,7 +63,7 @@ Nothing wrong with those tools. But they all require an account, send your trace
 
 **Agent Arena** — run the same task across multiple models and compare results side by side. Good for deciding which model is actually worth using for a given job.
 
-**Security Guard** — every LLM call is checked for prompt injection (via Little Canary, runs locally) and unsafe content (via Llama Guard 3 through Ollama). Findings are tagged with OWASP LLM Top 10 categories.
+**Security Guard** — every LLM call is checked for prompt injection (via Little Canary, runs locally) and unsafe content (via Llama Guard 3 through Ollama). Findings are tagged with OWASP LLM Top 10 categories. Screening failures (e.g. the optional `little-canary` package isn't installed, or Ollama is down) are recorded separately as `screening_degraded` events so a missed scan is never mistaken for a clean one — and never counted as a security finding.
 
 **Dashboard** — a React app with 8 pages: Overview, Runs, Failures, Arena, Replay, Models, Analytics, Security. All wired to the local FastAPI backend.
 
@@ -92,11 +92,16 @@ You'll need:
 git clone https://github.com/samvitgersappa/Orbit.git
 cd Orbit
 
+# base install
 uv sync
+
+# optional: enable the Security Guard (Little Canary prompt-injection screening)
+uv sync --extra security
 
 # pull the models you want to use
 ollama pull llama3.1
-ollama pull llama-guard3  # only needed for security scanning
+ollama pull llama-guard3  # only needed for content-safety scanning
+ollama pull qwen2.5:1.5b  # Little Canary's sacrificial canary model
 
 cd frontend && npm install && cd ..
 ```

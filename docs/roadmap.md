@@ -21,7 +21,7 @@
 
 **More failure detectors** — hallucinated tool calls (model references a tool that wasn't invoked), infinite loops, low-confidence answers. The detection engine is easy to extend; it's just not been prioritised yet.
 
-**PII detection** — there's a placeholder `pii.py` in the security module but it's not wired up. The plan is a regex-based scanner as a lightweight first pass.
+**PII detection** — not yet implemented. The plan is a regex-based scanner in the security module as a lightweight first pass, wired into the guardrail like the injection and content-safety detectors.
 
 **Live replay** — right now replay shows you what happened. The `--live` mode would actually re-execute each step, which is more useful for debugging but requires more work around state management.
 

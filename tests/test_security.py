@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 
 def test_owasp_category_mapping():
     """OWASP categories should match spec categories."""

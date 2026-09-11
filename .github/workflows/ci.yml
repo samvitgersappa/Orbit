@@ -63,7 +63,6 @@ jobs:
 
       - name: Lint
         run: cd frontend && npm run lint
-        continue-on-error: true
 
       - name: Build
         run: cd frontend && npm run build

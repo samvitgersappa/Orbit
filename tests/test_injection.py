@@ -13,6 +13,7 @@ import pytest
 
 from orbit.security.guardrail import SecurityGuard
 from orbit.security.injection import PromptInjectionDetector
+from orbit.security.ollama_guard import LLAMA_GUARD_ERROR_PREFIX
 
 little_canary = pytest.importorskip("little_canary")
 
@@ -206,6 +207,11 @@ class _NoopLlamaGuard:
         return False, None
 
 
+class _ErrorLlamaGuard:
+    async def scan(self, role: str, text: str) -> tuple[bool, str | None]:
+        return False, f"{LLAMA_GUARD_ERROR_PREFIX} model not found"
+
+
 async def test_guardrail_records_both_detection_and_degradation():
     """A structural hit while the canary is down must record the gap too."""
     probe = FakeCanaryProbe(response="", success=False, error="Ollama unreachable")
@@ -236,8 +242,22 @@ async def test_guardrail_records_missing_dependency(monkeypatch):
 
     assert len(guard.events) == 1
     assert guard.events[0]["risk_type"] == "screening_degraded"
+    assert guard.events[0]["owasp_category"] is None
     assert "unavailable" in guard.events[0]["details"]
     assert "orbit[security]" in guard.events[0]["details"]
+
+
+async def test_guardrail_records_llama_guard_degraded():
+    """A Llama Guard screening failure is recorded, not mistaken for clean."""
+    guard = _RecordingGuard(_detector(FakeCanaryProbe(response="Paris is the capital of France.")))
+    guard.llama_guard = _ErrorLlamaGuard()
+
+    await guard.scan_input(run_id=1, text="What is the capital of France?")
+
+    assert len(guard.events) == 1
+    assert guard.events[0]["risk_type"] == "screening_degraded"
+    assert guard.events[0]["detector"] == "llama_guard3"
+    assert guard.events[0]["owasp_category"] is None
 
 
 async def test_scan_tuple_hides_degraded_reason_without_detection():

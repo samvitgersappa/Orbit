@@ -359,6 +359,15 @@ async def get_metrics() -> dict[str, Any]:
         security_res = await session.execute(select(func.count()).select_from(SecurityEventRecord))
         total_security = security_res.scalar() or 0
 
+        # Findings exclude screening_degraded — that row type records detector
+        # availability, not a detected risk.
+        findings_res = await session.execute(
+            select(func.count())
+            .select_from(SecurityEventRecord)
+            .where(SecurityEventRecord.risk_type != "screening_degraded")
+        )
+        total_security_findings = findings_res.scalar() or 0
+
         # ARI distribution buckets
         excellent_res = await session.execute(
             select(func.count()).select_from(RunRecord).where(RunRecord.ari_score >= 85)
@@ -386,6 +395,7 @@ async def get_metrics() -> dict[str, Any]:
             "average_latency_ms": round(float(avg_latency), 1) if avg_latency else None,
             "total_failures": total_failures,
             "total_security_events": total_security,
+            "total_security_findings": total_security_findings,
             "ari_distribution": {
                 "excellent": excellent_res.scalar() or 0,
                 "good": good_res.scalar() or 0,

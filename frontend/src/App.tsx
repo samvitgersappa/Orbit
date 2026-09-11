@@ -33,7 +33,7 @@ interface SecurityEvent {
 interface Metrics {
   total_runs: number; successful_runs: number; failed_runs: number;
   success_rate: number; average_ari: number | null; average_latency_ms: number | null;
-  total_failures: number; total_security_events: number;
+  total_failures: number; total_security_events: number; total_security_findings: number;
   ari_distribution: { excellent: number; good: number; fair: number; poor: number };
 }
 interface ArenaData {
@@ -151,10 +151,10 @@ function OverviewTab({ runs }: { runs: Run[] }) {
           sub={`${metrics?.successful_runs ?? 0} of ${metrics?.total_runs ?? 0} runs`}
           icon={<TrendingUp className="w-4 h-4 text-muted-foreground" />}
           color={(metrics?.success_rate ?? 0) >= 80 ? "text-emerald-400" : "text-amber-400"} />
-        <StatCard title="Security Alerts" value={metrics?.total_security_events ?? 0}
-          sub={`${metrics?.total_failures ?? 0} failures detected`}
+        <StatCard title="Security Alerts" value={metrics?.total_security_findings ?? 0}
+          sub={`${metrics?.total_security_events ?? 0} events · ${metrics?.total_failures ?? 0} failures`}
           icon={<ShieldAlert className="w-4 h-4 text-rose-400" />}
-          color={(metrics?.total_security_events ?? 0) > 0 ? "text-rose-400" : "text-emerald-400"} />
+          color={(metrics?.total_security_findings ?? 0) > 0 ? "text-rose-400" : "text-emerald-400"} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -285,7 +285,7 @@ function RunsTab({ runs, loading }: { runs: Run[]; loading: boolean }) {
                           <Badge variant="outline" className="text-[10px] uppercase bg-background">{t.type}</Badge>
                           <span className="font-medium text-foreground">{t.node ?? "System"}</span>
                         </div>
-                        {t.content && typeof t.content === 'object' && Object.keys(t.content).length > 0 && (
+                        {typeof t.content === 'object' && t.content !== null && Object.keys(t.content).length > 0 && (
                           <div className="mt-2 bg-muted/30 p-2 rounded-md border border-border/40 space-y-2">
                             {Object.entries(t.content as Record<string, unknown>).map(([k, v]) => (
                               <div key={k} className="flex flex-col gap-1">
@@ -698,16 +698,19 @@ function SecurityTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {events.map(e => (
+                  {events.map(e => {
+                    const isStatus = e.risk_type === "screening_degraded"
+                    return (
                     <tr key={e.id} className="border-b border-border/20 hover:bg-muted/10">
                       <td className="py-1.5 px-2 mono">#{e.run_id}</td>
                       <td className="py-1.5 px-2"><Badge variant="outline" className="text-xs">{e.direction}</Badge></td>
                       <td className="py-1.5 px-2 text-muted-foreground">{e.detector}</td>
-                      <td className="py-1.5 px-2 text-rose-400">{e.risk_type}</td>
+                      <td className={`py-1.5 px-2 ${isStatus ? "text-amber-400" : "text-rose-400"}`}>{e.risk_type}</td>
                       <td className="py-1.5 px-2 text-muted-foreground">{e.owasp_category ?? "—"}</td>
                       <td className="py-1.5 px-2 text-right font-bold">{e.severity}</td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -779,18 +782,30 @@ function App() {
   const [runsLoading, setRunsLoading] = useState(true)
   const [ollamaOk, setOllamaOk] = useState<boolean | null>(null)
 
-  const refresh = useCallback(() => {
-    setRunsLoading(true)
-    Promise.all([
+  const fetchData = useCallback(async () => {
+    const [r, h] = await Promise.all([
       fetch(`${API}/runs`).then(r => r.json()),
       fetch(`${API}/health`).then(r => r.json()),
-    ]).then(([r, h]) => {
-      setRuns(r)
-      setOllamaOk(h.ollama)
-    }).catch(console.error).finally(() => setRunsLoading(false))
+    ])
+    setRuns(r)
+    setOllamaOk(h.ollama)
   }, [])
 
-  useEffect(() => { refresh() }, [refresh])
+  const refresh = useCallback(async () => {
+    setRunsLoading(true)
+    try {
+      await fetchData()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setRunsLoading(false)
+    }
+  }, [fetchData])
+
+  // Initial load only. fetchData awaits the network before setting state, so
+  // this does not trigger the synchronous cascading render the rule guards against.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void fetchData() }, [fetchData])
 
   return (
     <div className="min-h-screen bg-background text-foreground">

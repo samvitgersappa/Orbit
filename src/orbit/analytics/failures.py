@@ -22,6 +22,13 @@ class FailureDetectionEngine:
             )
             traces = trace_result.scalars().all()
 
+            # Idempotent: drop prior findings so re-analysis never duplicates rows.
+            existing = await session.execute(
+                select(FailureRecord).where(FailureRecord.run_id == run_id)
+            )
+            for failure in existing.scalars().all():
+                await session.delete(failure)
+
             failures = []
 
             # 1. Tool Failure

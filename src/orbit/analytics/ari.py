@@ -17,6 +17,14 @@ class ARIEvaluator:
             )
             tool_calls = tool_result.scalars().all()
 
+            # Idempotent: drop prior scores before writing fresh ones so a
+            # re-evaluation never accumulates duplicate ScoreRecord rows.
+            existing = await session.execute(
+                select(ScoreRecord).where(ScoreRecord.run_id == run_id)
+            )
+            for score in existing.scalars().all():
+                await session.delete(score)
+
             # 1. Task Success (T)
             t_score = 100.0 if run.success else 0.0
 
