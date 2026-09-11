@@ -41,7 +41,9 @@ dependencies = [
 
 [project.optional-dependencies]
 security = [
-    "little-canary>=0.3.0",
+    # >=0.3.3 for PipelineVerdict.degraded — lets us tell "screened and clean"
+    # apart from "could not screen".
+    "little-canary>=0.3.3",
 ]
 dev = [
     "mypy>=1.13.0",

@@ -48,7 +48,7 @@ def trace(
 ) -> None:
     """Run and trace an agent script."""
     typer.echo(f"🔍 Preparing to trace agent at {path}...")
-    
+
     async def _ensure_model() -> str:
         client = OllamaClient()
         try:
@@ -58,9 +58,9 @@ def trace(
             available = []
         finally:
             await client.close()
-            
+
         model_names = [m.get("name") for m in available if m.get("name")]
-        
+
         target_model = model
         if not target_model:
             typer.echo("\n📦 Available Local Models:")
@@ -68,7 +68,7 @@ def trace(
                 typer.echo(f"  • {m}")
             typer.echo("")
             target_model = Prompt.ask("Enter model name to use", default="qwen3.5:4b")
-            
+
         if target_model not in model_names:
             typer.echo(f"\n📥 Model '{target_model}' not found locally. Pulling from Ollama...")
             result = subprocess.run(["ollama", "pull", target_model])
@@ -76,14 +76,14 @@ def trace(
                 typer.echo("❌ Failed to pull model.", err=True)
                 raise typer.Exit(1)
             typer.echo("✅ Pull complete.\n")
-            
+
         return target_model
 
     selected_model = asyncio.run(_ensure_model())
-    
+
     env = os.environ.copy()
     env["ORBIT_MODEL"] = selected_model
-    
+
     typer.echo(f"🚀 Running agent with model: {selected_model}")
     result = subprocess.run([sys.executable, path], env=env, check=False)
     if result.returncode == 0:

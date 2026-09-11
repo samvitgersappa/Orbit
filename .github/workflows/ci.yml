@@ -26,9 +26,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        # Don't install the 'security' extra — little-canary has no Linux wheel
-        # and is not needed for linting or tests (import is handled gracefully)
-        run: uv sync --extra dev
+        # Install the optional adapter dependency so its regression tests run.
+        # They use the real pipeline with a fake probe; no Ollama calls are needed.
+        run: uv sync --extra dev --extra security
 
       - name: Lint
         run: uv run ruff check src/

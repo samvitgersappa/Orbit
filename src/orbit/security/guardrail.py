@@ -37,15 +37,33 @@ class SecurityGuard:
 
     async def scan_input(self, run_id: int, text: str):
         # 1. Prompt Injection
-        is_inj, reason = await self.injection_detector.scan(text)
-        if is_inj:
+        injection = await self.injection_detector.scan_detailed(text)
+        if injection.detected:
             await self._record_event(
                 run_id=run_id,
                 direction="input",
                 detector="little_canary",
                 risk_type="prompt_injection",
-                severity=9,
-                details=reason or "Detected prompt injection attempt",
+                severity=injection.severity or 9,
+                details=injection.reason or "Detected prompt injection attempt",
+                owasp_category="LLM01: Prompt Injection",
+            )
+        if injection.status in ("degraded", "unavailable", "error"):
+            # Screening did not complete. Recorded independently of the
+            # detection above — a structural hit does not mean the behavioral
+            # layer ran, and the trace should not imply it did.
+            await self._record_event(
+                run_id=run_id,
+                direction="input",
+                detector="little_canary",
+                risk_type="screening_degraded",
+                severity=3,
+                details=injection.reason
+                or (
+                    "Little Canary is unavailable; install the orbit[security] extra to enable screening."
+                    if injection.status == "unavailable"
+                    else "Injection screening did not complete"
+                ),
                 owasp_category="LLM01: Prompt Injection",
             )
 

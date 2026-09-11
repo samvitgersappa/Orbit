@@ -522,14 +522,14 @@ wheels = [
 
 [[package]]
 name = "little-canary"
-version = "0.3.0"
+version = "0.3.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/ff/9f542a5e07169042aa9fcf4df4fb4043447a102a304b81cbedaf123dbef1/little_canary-0.3.0.tar.gz", hash = "sha256:d9fbad0f9e3b380aadc6b6ec2ec26e2030355a9e7b6fa41eea2fad214d1c13d4", size = 56257, upload-time = "2026-03-23T02:30:40.283Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c6/4b/c7ff3e73547dfa8b0ae561728cc55e6b4c4ad9c182ff7aefe3cd21bad374/little_canary-0.3.5.tar.gz", hash = "sha256:290237265d7a2d3baa078a83c23520920bd71d72a198074aa3e25ee180a0c505", size = 79024, upload-time = "2026-09-03T03:08:46.214Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/7d/3c89d13e28482e604afba2d90d89ff2cdef49dbf32dd4e0c027a1e8c5979/little_canary-0.3.0-py3-none-any.whl", hash = "sha256:f9910dd7716a1f65f77607200be77a3f411329c59da6409e54a81ca7632dcafc", size = 41985, upload-time = "2026-03-23T02:30:39.222Z" },
+    { url = "https://files.pythonhosted.org/packages/54/0e/8fbd8c5d556b46e42d725ea2416bfd199627fa18e35773a2fc8dfb5bf5ff/little_canary-0.3.5-py3-none-any.whl", hash = "sha256:b5049200f2c2d020a22fff2f0ec28b3a3f7c96a69c28a7a2b73fb0c1b12c4d56", size = 53716, upload-time = "2026-09-03T03:08:44.768Z" },
 ]
 
 [[package]]
@@ -665,7 +665,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1" },
     { name = "langgraph", specifier = ">=1.2.6" },
-    { name = "little-canary", marker = "extra == 'security'", specifier = ">=0.3.0" },
+    { name = "little-canary", marker = "extra == 'security'", specifier = ">=0.3.3" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13.0" },
     { name = "ollama", specifier = ">=0.4.0" },
     { name = "pydantic", specifier = ">=2.10.0" },
